@@ -1041,6 +1041,42 @@ namespace Microsoft.AspNetCore.Mvc.FunctionalTests
         }
 
         [Fact]
+        public virtual async Task AttributeRoutedAction_Link_WithNameWithDefaultValues()
+        {
+            // Arrange & Act
+            var response = await Client.GetAsync("http://localhost/api/Company/5/HomeWithDefaultValues");
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var body = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<RoutingResult>(body);
+
+            Assert.Equal("Company", result.Controller);
+            Assert.Equal("GetHomeWithDefaultValues", result.Action);
+
+            Assert.Equal("/", result.ExpectedUrls.Single());
+            Assert.Null(result.RouteName);
+        }
+
+        [Fact]
+        public virtual async Task AttributeRoutedAction_Link_WithWithMissingRequiredValues()
+        {
+            // Arrange & Act
+            var response = await Client.GetAsync("http://localhost/api/Company/5/HomeWithMissingRequiredValues");
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var body = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<RoutingResult>(body);
+
+            Assert.Equal("Company", result.Controller);
+            Assert.Equal("GetHomeWithMissingRequiredValues", result.Action);
+
+            Assert.Equal("/api/Home", result.ExpectedUrls.Single());
+            Assert.Null(result.RouteName);
+        }
+
+        [Fact]
         public async Task ConventionalRoutedAction_DefaultValues_OptionalParameter_LinkToDefaultValuePath()
         {
             // Arrange

@@ -80,6 +80,10 @@ namespace RoutingWebSite
                 routes.MapRoute(
                     "RouteWithOptionalSegment",
                     "{controller}/{action}/{path?}");
+
+                routes.MapRoute(
+                    "ApiForController",
+                    "api/{controller}");
             });
 
             app.Map("/afterrouting", b => b.Run(c =>

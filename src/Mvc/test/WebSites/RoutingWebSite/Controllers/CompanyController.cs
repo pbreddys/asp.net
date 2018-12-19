@@ -59,5 +59,17 @@ namespace RoutingWebSite
         {
             return _generator.Generate(Url.RouteUrl("Departments", new { id = id }));
         }
+
+        [HttpGet("HomeWithDefaultValues")]
+        public ActionResult GetHomeWithDefaultValues(int id)
+        {
+            return _generator.Generate(Url.RouteUrl("ActionAsMethod", new { controller = "Home", action = "Index" }));
+        }
+
+        [HttpGet("HomeWithMissingRequiredValues")]
+        public ActionResult GetHomeWithMissingRequiredValues(int id)
+        {
+            return _generator.Generate(Url.RouteUrl("ApiForController", new { controller = "Home" }));
+        }
     }
 }
