@@ -31,7 +31,7 @@
             _validationMessages.AddRange(fieldIdentifier, results.Select(result => result.ErrorMessage));
         }
 
-        EditContext.NotifyValidationResultsChanged();
+        EditContext.NotifyValidationPerformed();
     }
 
     void OnValidationRequested()
@@ -61,6 +61,6 @@
             }
         }
 
-        EditContext.NotifyValidationResultsChanged();
+        EditContext.NotifyValidationPerformed();
     }
 }

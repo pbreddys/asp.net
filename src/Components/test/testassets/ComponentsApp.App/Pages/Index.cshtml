@@ -1,49 +1,29 @@
 @page "/"
 @using Microsoft.AspNetCore.Components.Forms
-@using System.ComponentModel
-@using System.ComponentModel.DataAnnotations
-@using System.Runtime.CompilerServices
 
-<h1>Hello, world!</h1>
+<h1>Create user account</h1>
 
-Welcome to your new app.
-
-<EditForm EditContext="@editContext" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInvalidSubmit">
+<EditForm Model="@registration" OnValidSubmit="@HandleValidSubmit">
     <p>
-        Username: <input bind="registration.UserName" class="@InputClass(context, nameof(registration.UserName))" />
+        Username: <input bind-value-oninput="registration.UserName" class="@InputClass(context, nameof(registration.UserName))" />
     </p>
     <p>
         Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@InputClass(context, nameof(registration.AcceptsTerms))" />
     </p>
     <p>
         <button type="submit">Submit</button>
-        <button onclick="@(() => Console.WriteLine("OK"))">Click me</button>
     </p>
 
     <DataAnnotationsValidator />
     <ValidationSummary />
 </EditForm>
 
-
-
 @functions {
     UserRegistration registration = new UserRegistration();
-    EditContext editContext;
 
-    protected override void OnInit()
+    static string InputClass(EditContext context, string fieldName)
     {
-        editContext = new EditContext(registration);
-
-        // Make the EditContext aware of INotifyPropertyChanged
-        registration.PropertyChanged += (sender, eventInfo) =>
-        {
-            editContext.NotifyFieldChanged(FieldIdentifier.Create(sender, eventInfo.PropertyName));
-        };
-    }
-
-    string InputClass(EditContext context, string fieldName)
-    {
-        var fieldIdentifier = FieldIdentifier.Create(registration, fieldName);
+        var fieldIdentifier = FieldIdentifier.Create(context.Model, fieldName);
         if (context.IsValid(fieldIdentifier))
         {
             return context.IsModified(fieldIdentifier) ? "valid" : string.Empty;
@@ -54,53 +34,9 @@ Welcome to your new app.
         }
     }
 
-    void HandleValidSubmit()
+    void HandleValidSubmit(EditContext editContext)
     {
         Console.WriteLine("You did submit");
         editContext.ClearModifications();
-    }
-
-    void HandleInvalidSubmit()
-    {
-        Console.WriteLine("Rejecting - invalid");
-    }
-
-    class UserRegistration : INotifyPropertyChanged
-    {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        string _userName;
-        bool _acceptsTerms;
-
-        [Required]
-        public string UserName
-        {
-            get => _userName;
-            set => SetProperty(ref _userName, value);
-        }
-
-        [Range(typeof(bool), "true", "true", ErrorMessage = "You gotta tick the box!")]
-        public bool AcceptsTerms
-        {
-            get => _acceptsTerms;
-            set => SetProperty(ref _acceptsTerms, value);
-        }
-
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (Equals(storage, value))
-            {
-                return false;
-            }
-
-            storage = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
     }
 }

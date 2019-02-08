@@ -3,7 +3,7 @@
 
 @if (!EditContext.IsValid())
 {
-    <ul class="validation-summaru">
+    <ul class="validation-summary">
         @foreach (var message in EditContext.ValidationErrorMessages())
         {
             <li>@message</li>
@@ -16,11 +16,11 @@
 
     protected override void OnInit()
     {
-        EditContext.ValidationResultsChanged += StateHasChanged;
+        EditContext.ValidationPerformed += StateHasChanged;
     }
 
     void IDisposable.Dispose()
     {
-        EditContext.ValidationResultsChanged -= StateHasChanged;
+        EditContext.ValidationPerformed -= StateHasChanged;
     }
 }

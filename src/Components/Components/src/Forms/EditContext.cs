@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace Microsoft.AspNetCore.Components.Forms
@@ -18,13 +19,24 @@ namespace Microsoft.AspNetCore.Components.Forms
 
         public event Action ValidationRequested;
 
-        public event Action ValidationResultsChanged;
+        public event Action ValidationPerformed;
 
         public object Model { get; }
 
         public EditContext(object model)
         {
             Model = model;
+
+            // Recognize INotifyPropertyChanged
+            // This won't work recursively, so if you want to react to PropertyChanged on descendant objects, you'd need to use some
+            // kind of <PropertyChangeListener Model=@mything.ChildObject /> that does this
+            if (Model is INotifyPropertyChanged notifyPropertySource)
+            {
+                notifyPropertySource.PropertyChanged += (sender, eventInfo) =>
+                {
+                    NotifyFieldChanged(FieldIdentifier.Create(sender, eventInfo.PropertyName));
+                };
+            }
         }
 
         public ValidationMessagesDictionary CreateValidationMessagesDictionary()
@@ -66,9 +78,9 @@ namespace Microsoft.AspNetCore.Components.Forms
             FieldChanged?.Invoke(this, fieldIdentifier);
         }
 
-        public void NotifyValidationResultsChanged()
+        public void NotifyValidationPerformed()
         {
-            ValidationResultsChanged?.Invoke();
+            ValidationPerformed?.Invoke();
         }
 
         public bool Validate()

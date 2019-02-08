@@ -13,8 +13,8 @@
 
     [Parameter] object Model { get; set; }
     [Parameter] RenderFragment<EditContext> ChildContent { get; set; }
-    [Parameter] Action OnValidSubmit { get; set; }
-    [Parameter] Action OnInvalidSubmit { get; set; }
+    [Parameter] Action<EditContext> OnValidSubmit { get; set; }
+    [Parameter] Action<EditContext> OnInvalidSubmit { get; set; }
     [Parameter] EditContext EditContext { get; set; }
 
     protected override void OnParametersSet()
@@ -33,11 +33,11 @@
     {
         if (_editContext.Validate())
         {
-            OnValidSubmit?.Invoke();
+            OnValidSubmit?.Invoke(_editContext);
         }
         else
         {
-            OnInvalidSubmit?.Invoke();
+            OnInvalidSubmit?.Invoke(_editContext);
         }
     }
 }
