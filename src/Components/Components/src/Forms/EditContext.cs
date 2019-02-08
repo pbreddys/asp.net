@@ -25,8 +25,8 @@ namespace Microsoft.AspNetCore.Components.Forms
 
         public event EventHandler ValidationRequested;
 
-        public ValidationSource CreateValidationSource()
-            => new ValidationSource(this);
+        public ValidationMessagesDictionary CreateValidationMessagesDictionary()
+            => new ValidationMessagesDictionary(this);
 
         public bool IsModified()
             => _fieldStates.Values.Any(s => s.IsModified);
@@ -78,7 +78,7 @@ namespace Microsoft.AspNetCore.Components.Forms
             }
             else if (ensureExists)
             {
-                result = new FieldState();
+                result = new FieldState(identifier);
                 _fieldStates.Add(identifier, result);
                 return result;
             }

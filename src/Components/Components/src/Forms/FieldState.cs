@@ -8,34 +8,27 @@ namespace Microsoft.AspNetCore.Components.Forms
 {
     internal class FieldState
     {
-        private Dictionary<ValidationSource, List<string>> _validationErrorMessages { get; } = new Dictionary<ValidationSource, List<string>>(); // TODO: Instantiate lazily
+        private FieldIdentifier _fieldIdentifier;
+        private HashSet<ValidationMessagesDictionary> _validationSources { get; } = new HashSet<ValidationMessagesDictionary>(); // TODO: Instantiate lazily
+
+        public FieldState(FieldIdentifier fieldIdentifier)
+        {
+            _fieldIdentifier = fieldIdentifier;
+        }
 
         public bool IsModified { get; set; }
 
         public IEnumerable<string> ValidationErrorMessages
-            => _validationErrorMessages.Values.SelectMany(x => x);
+            => _validationSources.SelectMany(source => source[_fieldIdentifier]);
 
-        public List<string> GetValidationErrorMessagesForSource(ValidationSource source, bool ensureExists)
+        public void AddValidationMessagesDictionary(ValidationMessagesDictionary source)
         {
-            if (_validationErrorMessages.TryGetValue(source, out var result))
-            {
-                return result;
-            }
-            else if (ensureExists)
-            {
-                result = new List<string>();
-                _validationErrorMessages.Add(source, result);
-                return result;
-            }
-            else
-            {
-                return null;
-            }
+            _validationSources.Add(source);
         }
 
-        public void ClearValidationErrorMessagesForSource(ValidationSource source)
+        public void RemoveValidationMessagesDictionary(ValidationMessagesDictionary source)
         {
-            _validationErrorMessages.Remove(source);
+            _validationSources.Remove(source);
         }
 
         // Consider also additional a general property bag here, with the ability for EditContext

@@ -33,13 +33,13 @@ Welcome to your new app.
 @functions {
     UserRegistration registration;
     EditContext editContext;
-    ValidationSource validationSource;
+    ValidationMessagesDictionary validationMessages;
 
     protected override void OnInit()
     {
         registration = new UserRegistration();
         editContext = new EditContext(registration);
-        validationSource = editContext.CreateValidationSource();
+        validationMessages = editContext.CreateValidationMessagesDictionary();
 
         // Make the EditContext aware of INotifyPropertyChanged
         registration.PropertyChanged += (sender, eventInfo) =>
@@ -50,7 +50,7 @@ Welcome to your new app.
         // Do DataAnnotations validation on a per-property-changed basis
         editContext.FieldChanged += (sender, fieldIdentifier) =>
         {
-            var messagesForField = validationSource[fieldIdentifier];
+            var messagesForField = validationMessages[fieldIdentifier];
             messagesForField.Clear();
 
             var validationContext = new ValidationContext(fieldIdentifier.Model) { MemberName = fieldIdentifier.FieldName };
@@ -65,7 +65,7 @@ Welcome to your new app.
         // Do DataAnnotations validation on per-object basis on request
         editContext.ValidationRequested += (sender, eventArgs) =>
         {
-            validationSource.Clear();
+            validationMessages.Clear();
 
             var senderContext = (EditContext)sender;
             var validationContext = new ValidationContext(senderContext.Model);
@@ -80,7 +80,7 @@ Welcome to your new app.
                 foreach (var errorsGroup in messagesByMemberName)
                 {
                     var fieldIdentifier = FieldIdentifier.Create(senderContext.Model, errorsGroup.Key);
-                    validationSource[fieldIdentifier].AddRange(
+                    validationMessages[fieldIdentifier].AddRange(
                         errorsGroup.Select(g => g.result.ErrorMessage));
                 }
             }
