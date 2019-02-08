@@ -38,7 +38,7 @@ Welcome to your new app.
     protected override void OnInit()
     {
         registration = new UserRegistration();
-        editContext = new EditContext(registration);
+        editContext = new EditContext();
         validationMessages = editContext.CreateValidationMessagesDictionary();
 
         // Make the EditContext aware of INotifyPropertyChanged
@@ -67,9 +67,9 @@ Welcome to your new app.
             validationMessages.Clear();
 
             var senderContext = (EditContext)sender;
-            var validationContext = new ValidationContext(senderContext.Model);
+            var validationContext = new ValidationContext(registration);
             var results = new List<ValidationResult>();
-            if (!Validator.TryValidateObject(senderContext.Model, validationContext, results, true))
+            if (!Validator.TryValidateObject(registration, validationContext, results, true))
             {
                 var messagesByMemberName =
                     from result in results
@@ -78,7 +78,7 @@ Welcome to your new app.
                     group pair by pair.memberName;
                 foreach (var errorsGroup in messagesByMemberName)
                 {
-                    var fieldIdentifier = FieldIdentifier.Create(senderContext.Model, errorsGroup.Key);
+                    var fieldIdentifier = FieldIdentifier.Create(registration, errorsGroup.Key);
                     validationMessages.AddRange(fieldIdentifier,
                         errorsGroup.Select(g => g.result.ErrorMessage));
                 }

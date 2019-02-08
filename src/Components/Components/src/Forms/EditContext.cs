@@ -14,13 +14,6 @@ namespace Microsoft.AspNetCore.Components.Forms
     {
         private Dictionary<FieldIdentifier, FieldState> _fieldStates = new Dictionary<FieldIdentifier, FieldState>();
 
-        public EditContext(object model)
-        {
-            Model = model ?? throw new ArgumentNullException(nameof(model));
-        }
-
-        public object Model { get; } // TODO: Is this really needed?
-
         public event EventHandler<FieldIdentifier> FieldChanged;
 
         public event EventHandler ValidationRequested;
