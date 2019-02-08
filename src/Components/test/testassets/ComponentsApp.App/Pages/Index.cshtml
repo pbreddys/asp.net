@@ -33,13 +33,13 @@ Welcome to your new app.
 @functions {
     UserRegistration registration;
     EditContext editContext;
-    EditScope editScope;
+    ValidationSource validationSource;
 
     protected override void OnInit()
     {
         registration = new UserRegistration();
         editContext = new EditContext(registration);
-        editScope = editContext.CreateScope();
+        validationSource = editContext.CreateValidationSource();
 
         // Make the EditContext aware of INotifyPropertyChanged
         registration.PropertyChanged += (sender, eventInfo) =>
@@ -50,22 +50,22 @@ Welcome to your new app.
         // Do DataAnnotations validation on a per-property-changed basis
         editContext.FieldChanged += (sender, fieldIdentifier) =>
         {
-            var fieldState = editScope[fieldIdentifier];
-            fieldState.ValidationErrorMessages.Clear();
+            var messagesForField = validationSource[fieldIdentifier];
+            messagesForField.Clear();
 
             var validationContext = new ValidationContext(fieldIdentifier.Model) { MemberName = fieldIdentifier.FieldName };
             var propertyValue = fieldIdentifier.Model.GetType().GetProperty(fieldIdentifier.FieldName).GetValue(fieldIdentifier.Model);
             var results = new List<ValidationResult>();
             if (!Validator.TryValidateProperty(propertyValue, validationContext, results))
             {
-                fieldState.ValidationErrorMessages.AddRange(results.Select(result => result.ErrorMessage));
+                messagesForField.AddRange(results.Select(result => result.ErrorMessage));
             }
         };
 
         // Do DataAnnotations validation on per-object basis on request
         editContext.ValidationRequested += (sender, eventArgs) =>
         {
-            editScope.Clear();
+            validationSource.Clear();
 
             var senderContext = (EditContext)sender;
             var validationContext = new ValidationContext(senderContext.Model);
@@ -80,7 +80,7 @@ Welcome to your new app.
                 foreach (var errorsGroup in messagesByMemberName)
                 {
                     var fieldIdentifier = FieldIdentifier.Create(senderContext.Model, errorsGroup.Key);
-                    editScope[fieldIdentifier].ValidationErrorMessages.AddRange(
+                    validationSource[fieldIdentifier].AddRange(
                         errorsGroup.Select(g => g.result.ErrorMessage));
                 }
             }
