@@ -9,7 +9,7 @@ namespace Microsoft.AspNetCore.Components.Forms
     internal class FieldState
     {
         private FieldIdentifier _fieldIdentifier;
-        private HashSet<ValidationMessagesDictionary> _validationSources { get; } = new HashSet<ValidationMessagesDictionary>(); // TODO: Instantiate lazily
+        private HashSet<ValidationMessagesDictionary> _validationSources;
 
         public FieldState(FieldIdentifier fieldIdentifier)
         {
@@ -19,16 +19,23 @@ namespace Microsoft.AspNetCore.Components.Forms
         public bool IsModified { get; set; }
 
         public IEnumerable<string> ValidationErrorMessages
-            => _validationSources.SelectMany(source => source[_fieldIdentifier]);
+            => _validationSources?.SelectMany(source => source[_fieldIdentifier]) ?? Enumerable.Empty<string>();
 
         public void AddValidationMessagesDictionary(ValidationMessagesDictionary source)
         {
+            if (_validationSources == null)
+            {
+                _validationSources = new HashSet<ValidationMessagesDictionary>();
+            }
+
+            // If you wanted, you could also make a call to the EditContext to notify it that this field state now may contain validation messages
+            // The EditContext could track that list so that, when evaluating all ValidationMessages, it only has to consider fields that have had a validation error at some point
             _validationSources.Add(source);
         }
 
         public void RemoveValidationMessagesDictionary(ValidationMessagesDictionary source)
         {
-            _validationSources.Remove(source);
+            _validationSources?.Remove(source);
         }
 
         // Consider also additional a general property bag here, with the ability for EditContext

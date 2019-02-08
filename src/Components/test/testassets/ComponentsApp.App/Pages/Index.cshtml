@@ -50,15 +50,14 @@ Welcome to your new app.
         // Do DataAnnotations validation on a per-property-changed basis
         editContext.FieldChanged += (sender, fieldIdentifier) =>
         {
-            var messagesForField = validationMessages[fieldIdentifier];
-            messagesForField.Clear();
+            validationMessages.Clear(fieldIdentifier);
 
             var validationContext = new ValidationContext(fieldIdentifier.Model) { MemberName = fieldIdentifier.FieldName };
             var propertyValue = fieldIdentifier.Model.GetType().GetProperty(fieldIdentifier.FieldName).GetValue(fieldIdentifier.Model);
             var results = new List<ValidationResult>();
             if (!Validator.TryValidateProperty(propertyValue, validationContext, results))
             {
-                messagesForField.AddRange(results.Select(result => result.ErrorMessage));
+                validationMessages.AddRange(fieldIdentifier, results.Select(result => result.ErrorMessage));
             }
         };
 
@@ -80,7 +79,7 @@ Welcome to your new app.
                 foreach (var errorsGroup in messagesByMemberName)
                 {
                     var fieldIdentifier = FieldIdentifier.Create(senderContext.Model, errorsGroup.Key);
-                    validationMessages[fieldIdentifier].AddRange(
+                    validationMessages.AddRange(fieldIdentifier,
                         errorsGroup.Select(g => g.result.ErrorMessage));
                 }
             }

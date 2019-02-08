@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.AspNetCore.Components.Forms
 {
@@ -16,21 +17,35 @@ namespace Microsoft.AspNetCore.Components.Forms
             _editContext = editContext;
         }
 
-        public List<string> this[FieldIdentifier fieldIdentifier]
+        public IEnumerable<string> this[FieldIdentifier fieldIdentifier]
+            => _messagesByField.TryGetValue(fieldIdentifier, out var result)
+            ? result
+            : Enumerable.Empty<string>();
+
+        public void Add(FieldIdentifier fieldIdentifier, string message)
+            => GetOrCreateMessagesListForField(fieldIdentifier).Add(message);
+
+        public void AddRange(FieldIdentifier fieldIdentifier, IEnumerable<string> messages)
+            => GetOrCreateMessagesListForField(fieldIdentifier).AddRange(messages);
+
+        private List<string> GetOrCreateMessagesListForField(FieldIdentifier fieldIdentifier)
         {
-            get
+            if (!_messagesByField.TryGetValue(fieldIdentifier, out var messagesForField))
             {
-                if (!_messagesByField.TryGetValue(fieldIdentifier, out var result))
-                {
-                    result = new List<string>();
-                    _messagesByField.Add(fieldIdentifier, result);
+                messagesForField = new List<string>();
+                _messagesByField.Add(fieldIdentifier, messagesForField);
 
-                    // Also attach ourself to the FieldState, so we can find these messages when querying across all dictionaries
-                    _editContext.GetState(fieldIdentifier, true).AddValidationMessagesDictionary(this);
-                }
-
-                return result;
+                // Also attach ourself to the FieldState, so we can find these messages when querying across all dictionaries
+                _editContext.GetState(fieldIdentifier, true).AddValidationMessagesDictionary(this);
             }
+
+            return messagesForField;
+        }
+
+        public void Clear(FieldIdentifier fieldIdentifier)
+        {
+            _editContext.GetState(fieldIdentifier, false)?.RemoveValidationMessagesDictionary(this);
+            _messagesByField.Remove(fieldIdentifier);
         }
 
         public void Clear()
