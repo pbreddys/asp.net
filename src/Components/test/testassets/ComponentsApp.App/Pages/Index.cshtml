@@ -8,90 +8,45 @@
 
 Welcome to your new app.
 
-<form onsubmit="@HandleSubmit">
+<EditForm EditContext="@editContext" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInvalidSubmit">
     <p>
-        Username: <input bind="registration.UserName" class="@InputClass(nameof(registration.UserName))" />
+        Username: <input bind="registration.UserName" class="@InputClass(context, nameof(registration.UserName))" />
     </p>
     <p>
-        Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@InputClass(nameof(registration.AcceptsTerms))" />
+        Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@InputClass(context, nameof(registration.AcceptsTerms))" />
     </p>
     <p>
         <button type="submit">Submit</button>
+        <button onclick="@(() => Console.WriteLine("OK"))">Click me</button>
     </p>
-</form>
 
-@if (!editContext.IsValid())
-{
-    <ul>
-        @foreach (var message in editContext.ValidationErrorMessages())
-        {
-            <li>@message</li>
-        }
-    </ul>
-}
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+</EditForm>
+
+
 
 @functions {
-    UserRegistration registration;
+    UserRegistration registration = new UserRegistration();
     EditContext editContext;
-    ValidationMessagesDictionary validationMessages;
 
     protected override void OnInit()
     {
-        registration = new UserRegistration();
-        editContext = new EditContext();
-        validationMessages = editContext.CreateValidationMessagesDictionary();
+        editContext = new EditContext(registration);
 
         // Make the EditContext aware of INotifyPropertyChanged
         registration.PropertyChanged += (sender, eventInfo) =>
         {
             editContext.NotifyFieldChanged(FieldIdentifier.Create(sender, eventInfo.PropertyName));
         };
-
-        // Do DataAnnotations validation on a per-property-changed basis
-        editContext.FieldChanged += (sender, fieldIdentifier) =>
-        {
-            validationMessages.Clear(fieldIdentifier);
-
-            var validationContext = new ValidationContext(fieldIdentifier.Model) { MemberName = fieldIdentifier.FieldName };
-            var propertyValue = fieldIdentifier.Model.GetType().GetProperty(fieldIdentifier.FieldName).GetValue(fieldIdentifier.Model);
-            var results = new List<ValidationResult>();
-            if (!Validator.TryValidateProperty(propertyValue, validationContext, results))
-            {
-                validationMessages.AddRange(fieldIdentifier, results.Select(result => result.ErrorMessage));
-            }
-        };
-
-        // Do DataAnnotations validation on per-object basis on request
-        editContext.ValidationRequested += (sender, eventArgs) =>
-        {
-            validationMessages.Clear();
-
-            var senderContext = (EditContext)sender;
-            var validationContext = new ValidationContext(registration);
-            var results = new List<ValidationResult>();
-            if (!Validator.TryValidateObject(registration, validationContext, results, true))
-            {
-                var messagesByMemberName =
-                    from result in results
-                    from memberName in result.MemberNames
-                    let pair = (result, memberName)
-                    group pair by pair.memberName;
-                foreach (var errorsGroup in messagesByMemberName)
-                {
-                    var fieldIdentifier = FieldIdentifier.Create(registration, errorsGroup.Key);
-                    validationMessages.AddRange(fieldIdentifier,
-                        errorsGroup.Select(g => g.result.ErrorMessage));
-                }
-            }
-        };
     }
 
-    string InputClass(string fieldName)
+    string InputClass(EditContext context, string fieldName)
     {
         var fieldIdentifier = FieldIdentifier.Create(registration, fieldName);
-        if (editContext.IsValid(fieldIdentifier))
+        if (context.IsValid(fieldIdentifier))
         {
-            return editContext.IsModified(fieldIdentifier) ? "valid" : string.Empty;
+            return context.IsModified(fieldIdentifier) ? "valid" : string.Empty;
         }
         else
         {
@@ -99,17 +54,15 @@ Welcome to your new app.
         }
     }
 
-    void HandleSubmit()
+    void HandleValidSubmit()
     {
-        if (editContext.Validate())
-        {
-            Console.WriteLine("You did submit");
-            editContext.ClearModifications();
-        }
-        else
-        {
-            Console.WriteLine("Rejecting submit - not valid");
-        }
+        Console.WriteLine("You did submit");
+        editContext.ClearModifications();
+    }
+
+    void HandleInvalidSubmit()
+    {
+        Console.WriteLine("Rejecting - invalid");
     }
 
     class UserRegistration : INotifyPropertyChanged

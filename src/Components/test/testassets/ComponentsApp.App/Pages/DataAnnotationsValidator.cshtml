@@ -1,0 +1,66 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@implements IDisposable
+@functions {
+    private ValidationMessagesDictionary _validationMessages;
+
+    [CascadingParameter] EditContext EditContext { get; set; }
+
+    protected override void OnInit()
+    {
+        _validationMessages = EditContext.CreateValidationMessagesDictionary();
+        EditContext.FieldChanged += OnFieldChanged;
+        EditContext.ValidationRequested += OnValidationRequested;
+    }
+
+    void IDisposable.Dispose()
+    {
+        EditContext.FieldChanged -= OnFieldChanged;
+        EditContext.ValidationRequested -= OnValidationRequested;
+    }
+
+    void OnFieldChanged(object sender, FieldIdentifier fieldIdentifier)
+    {
+        _validationMessages.Clear(fieldIdentifier);
+
+        var validationContext = new ValidationContext(fieldIdentifier.Model) { MemberName = fieldIdentifier.FieldName };
+        var propertyValue = fieldIdentifier.Model.GetType().GetProperty(fieldIdentifier.FieldName).GetValue(fieldIdentifier.Model);
+        var results = new List<ValidationResult>();
+        if (!Validator.TryValidateProperty(propertyValue, validationContext, results))
+        {
+            _validationMessages.AddRange(fieldIdentifier, results.Select(result => result.ErrorMessage));
+        }
+
+        EditContext.NotifyValidationResultsChanged();
+    }
+
+    void OnValidationRequested()
+    {
+        if (EditContext.Model == null)
+        {
+            // Nothing to validate
+            return;
+        }
+
+        _validationMessages.Clear();
+        
+        var validationContext = new ValidationContext(EditContext.Model);
+        var results = new List<ValidationResult>();
+        if (!Validator.TryValidateObject(EditContext.Model, validationContext, results, true))
+        {
+            var messagesByMemberName =
+                from result in results
+                from memberName in result.MemberNames
+                let pair = (result, memberName)
+                group pair by pair.memberName;
+            foreach (var errorsGroup in messagesByMemberName)
+            {
+                var fieldIdentifier = FieldIdentifier.Create(EditContext.Model, errorsGroup.Key);
+                _validationMessages.AddRange(fieldIdentifier,
+                    errorsGroup.Select(g => g.result.ErrorMessage));
+            }
+        }
+
+        EditContext.NotifyValidationResultsChanged();
+    }
+}

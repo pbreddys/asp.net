@@ -16,7 +16,16 @@ namespace Microsoft.AspNetCore.Components.Forms
 
         public event EventHandler<FieldIdentifier> FieldChanged;
 
-        public event EventHandler ValidationRequested;
+        public event Action ValidationRequested;
+
+        public event Action ValidationResultsChanged;
+
+        public object Model { get; }
+
+        public EditContext(object model)
+        {
+            Model = model;
+        }
 
         public ValidationMessagesDictionary CreateValidationMessagesDictionary()
             => new ValidationMessagesDictionary(this);
@@ -57,9 +66,14 @@ namespace Microsoft.AspNetCore.Components.Forms
             FieldChanged?.Invoke(this, fieldIdentifier);
         }
 
+        public void NotifyValidationResultsChanged()
+        {
+            ValidationResultsChanged?.Invoke();
+        }
+
         public bool Validate()
         {
-            ValidationRequested?.Invoke(this, null);
+            ValidationRequested?.Invoke();
             return IsValid();
         }
 

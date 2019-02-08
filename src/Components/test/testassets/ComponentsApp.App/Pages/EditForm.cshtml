@@ -1,0 +1,43 @@
+@using Microsoft.AspNetCore.Components.Forms
+
+<form onsubmit="@HandleSubmit">
+    <CascadingValue Value="@_editContext" IsFixed="true">
+        <WorkaroundEventsBug>
+            @ChildContent(_editContext)
+        </WorkaroundEventsBug>
+    </CascadingValue>
+</form>
+
+@functions  {
+    private EditContext _editContext;
+
+    [Parameter] object Model { get; set; }
+    [Parameter] RenderFragment<EditContext> ChildContent { get; set; }
+    [Parameter] Action OnValidSubmit { get; set; }
+    [Parameter] Action OnInvalidSubmit { get; set; }
+    [Parameter] EditContext EditContext { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (_editContext == null)
+        {
+            _editContext = EditContext ?? new EditContext(Model);
+        }
+        else if (EditContext != null && EditContext != _editContext)
+        {
+            throw new InvalidOperationException("Cannot change the edit context once it has been set.");
+        }
+    }
+
+    void HandleSubmit()
+    {
+        if (_editContext.Validate())
+        {
+            OnValidSubmit?.Invoke();
+        }
+        else
+        {
+            OnInvalidSubmit?.Invoke();
+        }
+    }
+}
