@@ -1,5 +1,154 @@
-﻿@page "/"
+@page "/"
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using System.Runtime.CompilerServices
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+<form onsubmit="@HandleSubmit">
+    <p>
+        Username: <input bind="registration.UserName" class="@InputClass(nameof(registration.UserName))" />
+    </p>
+    <p>
+        Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@InputClass(nameof(registration.AcceptsTerms))" />
+    </p>
+    <p>
+        <button type="submit">Submit</button>
+    </p>
+</form>
+
+@if (!editContext.IsValid())
+{
+    <ul>
+        @foreach (var message in editContext.ValidationErrorMessages())
+        {
+            <li>@message</li>
+        }
+    </ul>
+}
+
+@functions {
+    UserRegistration registration;
+    EditContext editContext;
+    EditScope editScope;
+
+    protected override void OnInit()
+    {
+        registration = new UserRegistration();
+        editContext = new EditContext(registration);
+        editScope = editContext.CreateScope();
+
+        // Make the EditContext aware of INotifyPropertyChanged
+        registration.PropertyChanged += (sender, eventInfo) =>
+        {
+            editContext.NotifyFieldChanged(FieldIdentifier.Create(sender, eventInfo.PropertyName));
+        };
+
+        // Do DataAnnotations validation on a per-property-changed basis
+        editContext.FieldChanged += (sender, fieldIdentifier) =>
+        {
+            var fieldState = editScope[fieldIdentifier];
+            fieldState.ValidationErrorMessages.Clear();
+
+            var validationContext = new ValidationContext(fieldIdentifier.Model) { MemberName = fieldIdentifier.FieldName };
+            var propertyValue = fieldIdentifier.Model.GetType().GetProperty(fieldIdentifier.FieldName).GetValue(fieldIdentifier.Model);
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateProperty(propertyValue, validationContext, results))
+            {
+                fieldState.ValidationErrorMessages.AddRange(results.Select(result => result.ErrorMessage));
+            }
+        };
+
+        // Do DataAnnotations validation on per-object basis on request
+        editContext.ValidationRequested += (sender, eventArgs) =>
+        {
+            editScope.Clear();
+
+            var senderContext = (EditContext)sender;
+            var validationContext = new ValidationContext(senderContext.Model);
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(senderContext.Model, validationContext, results, true))
+            {
+                var messagesByMemberName =
+                    from result in results
+                    from memberName in result.MemberNames
+                    let pair = (result, memberName)
+                    group pair by pair.memberName;
+                foreach (var errorsGroup in messagesByMemberName)
+                {
+                    var fieldIdentifier = FieldIdentifier.Create(senderContext.Model, errorsGroup.Key);
+                    editScope[fieldIdentifier].ValidationErrorMessages.AddRange(
+                        errorsGroup.Select(g => g.result.ErrorMessage));
+                }
+            }
+        };
+    }
+
+    string InputClass(string fieldName)
+    {
+        var fieldIdentifier = FieldIdentifier.Create(registration, fieldName);
+        if (editContext.IsValid(fieldIdentifier))
+        {
+            return editContext.IsModified(fieldIdentifier) ? "valid" : string.Empty;
+        }
+        else
+        {
+            return "invalid";
+        }
+    }
+
+    void HandleSubmit()
+    {
+        if (editContext.Validate())
+        {
+            Console.WriteLine("You did submit");
+            editContext.ClearModifications();
+        }
+        else
+        {
+            Console.WriteLine("Rejecting submit - not valid");
+        }
+    }
+
+    class UserRegistration : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        string _userName;
+        bool _acceptsTerms;
+
+        [Required]
+        public string UserName
+        {
+            get => _userName;
+            set => SetProperty(ref _userName, value);
+        }
+
+        [Range(typeof(bool), "true", "true", ErrorMessage = "You gotta tick the box!")]
+        public bool AcceptsTerms
+        {
+            get => _acceptsTerms;
+            set => SetProperty(ref _acceptsTerms, value);
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (Equals(storage, value))
+            {
+                return false;
+            }
+
+            storage = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+    }
+}
