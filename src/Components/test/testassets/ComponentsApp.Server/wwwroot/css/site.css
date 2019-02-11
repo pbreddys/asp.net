@@ -129,3 +129,7 @@ app {
 .invalid {
     box-shadow: 0px 0px 0px 2px rgb(255, 0, 0);
 }
+
+.error {
+    color: red;
+}

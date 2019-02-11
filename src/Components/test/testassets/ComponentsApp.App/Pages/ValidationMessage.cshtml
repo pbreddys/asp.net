@@ -1,18 +1,17 @@
 @using Microsoft.AspNetCore.Components.Forms
 @implements IDisposable
 
-@if (!EditContext.IsValid())
+@if (For.Model != null)
 {
-    <ul class="validation-summary">
-        @foreach (var message in EditContext.ValidationErrorMessages())
-        {
-            <li class="error">@message</li>
-        }
-    </ul>
+    foreach (var message in EditContext.ValidationErrorMessages(For))
+    {
+        <span class="error">@message</span>
+    }
 }
 
 @functions  {
     [CascadingParameter] EditContext EditContext { get; set; }
+    [Parameter] FieldIdentifier For { get; set; }
 
     protected override void OnInit()
     {

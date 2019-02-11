@@ -8,6 +8,7 @@
     </p>
     <p>
         Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@context.ClassName(FieldIdentifier.Create(registration, nameof(registration.AcceptsTerms)))" />
+        <ValidationMessage For="FieldIdentifier.Create(registration, nameof(registration.AcceptsTerms))" />
     </p>
     <p>
         <button type="submit">Submit</button>
