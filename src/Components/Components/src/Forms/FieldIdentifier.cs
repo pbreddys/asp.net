@@ -39,18 +39,43 @@ namespace Microsoft.AspNetCore.Components.Forms
                 possibleMemberExpression = unaryExpression.Operand;
             }
 
-            if (!(possibleMemberExpression is MemberExpression memberExpression
-                && memberExpression.Member is PropertyInfo propertyInfo))
+            string memberName;
+            if (possibleMemberExpression is MemberExpression memberExpression)
             {
-                throw new InvalidOperationException("Currently, only PropertyExpression is supported.");
+                switch (memberExpression.Member)
+                {
+                    case PropertyInfo propertyInfo:
+                        memberName = propertyInfo.Name;
+                        break;
+                    case FieldInfo fieldInfo:
+                        memberName = fieldInfo.Name;
+                        break;
+                    default:
+                        throw new InvalidOperationException("Currently, only PropertyInfo and FieldInfo are supported.");
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Currently, only MemberExpression is supported.");
             }
 
-            // TODO: Can we cache this somehow?
-            var modelExpression = (MemberExpression)memberExpression.Expression;
-            var modelLambda = Expression.Lambda(modelExpression);
-            var modelLambdaCompiled = (Func<object>)modelLambda.Compile();
+            object model;
+            switch (memberExpression.Expression)
+            {
+                case ConstantExpression constantExpression:
+                    model = constantExpression.Value;
+                    break;
+                case MemberExpression nestedMemberExpression:
+                    // TODO: Can we cache this somehow?
+                    var modelLambda = Expression.Lambda(nestedMemberExpression);
+                    var modelLambdaCompiled = (Func<object>)modelLambda.Compile();
+                    model = modelLambdaCompiled();
+                    break;
+                default:
+                    throw new InvalidOperationException("Currently, only ConstantExpression and MemberExpression is supported.");
+            }
 
-            return new FieldIdentifier(modelLambdaCompiled(), propertyInfo.Name);
+            return new FieldIdentifier(model, memberName);
         }
 
         // The constructor is private to enforce usage of FieldIdentifier.Create<TModel>, which in turn enforces that the model
