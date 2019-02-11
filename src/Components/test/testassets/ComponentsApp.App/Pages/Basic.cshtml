@@ -2,13 +2,15 @@
 
 <h1>Create user account</h1>
 
-<EditForm Model="@registration" OnValidSubmit="@HandleValidSubmit">
+<EditForm Model="@this" OnValidSubmit="@HandleValidSubmit">
     <p>
-        Username: <input bind-value-oninput="registration.UserName" class="@context.ClassName(() => registration.UserName)" />
+        Username:
+        <input bind="UserName" class="@context.ClassName(() => UserName)" />
     </p>
     <p>
-        Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@context.ClassName(() => registration.AcceptsTerms)" />
-        <ValidationMessage For="@(() => registration.AcceptsTerms)" />
+        Accept terms:
+        <input type="checkbox" bind="AcceptsTerms" class="@context.ClassName(() => AcceptsTerms)" />
+        <ValidationMessage For="@(() => AcceptsTerms)" />
     </p>
     <p>
         <button type="submit">Submit</button>
@@ -19,7 +21,12 @@
 </EditForm>
 
 @functions {
-    UserRegistration registration = new UserRegistration();
+    [Required]
+    [StringLength(6)]
+    public string UserName { get; set; }
+
+    [Range(typeof(bool), "true", "true", ErrorMessage = "You gotta tick the box!")]
+    public bool AcceptsTerms { get; set; }
 
     void HandleValidSubmit(EditContext editContext)
     {

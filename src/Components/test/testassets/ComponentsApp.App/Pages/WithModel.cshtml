@@ -1,0 +1,40 @@
+@page "/model"
+
+<h1>Create user account</h1>
+
+<EditForm Model="@registration" OnValidSubmit="@HandleValidSubmit">
+    <p>
+        Username:
+        <input bind="registration.UserName" class="@context.ClassName(() => registration.UserName)" />
+    </p>
+    <p>
+        Accept terms:
+        <input type="checkbox" bind="registration.AcceptsTerms" class="@context.ClassName(() => registration.AcceptsTerms)" />
+    </p>
+    <p>
+        <button type="submit">Submit</button>
+    </p>
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+</EditForm>
+
+@functions {
+    Registration registration = new Registration();
+
+    void HandleValidSubmit(EditContext editContext)
+    {
+        Console.WriteLine("You did submit");
+        editContext.ClearModifications();
+    }
+
+    class Registration
+    {
+        [Required]
+        [StringLength(6)]
+        public string UserName { get; set; }
+
+        [Range(typeof(bool), "true", "true", ErrorMessage = "You gotta tick the box!")]
+        public bool AcceptsTerms { get; set; }
+    }
+}

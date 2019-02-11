@@ -1,0 +1,30 @@
+@page "/advanced"
+
+<h1>Create user account</h1>
+
+<EditForm Model="@registration" OnValidSubmit="@HandleValidSubmit">
+    <p>
+        Username:
+        <input bind-value-oninput="registration.UserName" class="@context.ClassName(() => registration.UserName)" />
+    </p>
+    <p>
+        Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@context.ClassName(() => registration.AcceptsTerms)" />
+        <ValidationMessage For="@(() => registration.AcceptsTerms)" />
+    </p>
+    <p>
+        <button type="submit">Submit</button>
+    </p>
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+</EditForm>
+
+@functions {
+    UserRegistration registration = new UserRegistration();
+
+    void HandleValidSubmit(EditContext editContext)
+    {
+        Console.WriteLine("You did submit");
+        editContext.ClearModifications();
+    }
+}
