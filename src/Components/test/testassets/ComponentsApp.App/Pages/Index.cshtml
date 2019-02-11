@@ -1,14 +1,13 @@
 @page "/"
-@using Microsoft.AspNetCore.Components.Forms
 
 <h1>Create user account</h1>
 
 <EditForm Model="@registration" OnValidSubmit="@HandleValidSubmit">
     <p>
-        Username: <input bind-value-oninput="registration.UserName" class="@InputClass(context, nameof(registration.UserName))" />
+        Username: <input bind-value-oninput="registration.UserName" class="@context.ClassName(FieldIdentifier.Create(registration, nameof(registration.UserName)))" />
     </p>
     <p>
-        Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@InputClass(context, nameof(registration.AcceptsTerms))" />
+        Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@context.ClassName(FieldIdentifier.Create(registration, nameof(registration.AcceptsTerms)))" />
     </p>
     <p>
         <button type="submit">Submit</button>
@@ -20,19 +19,6 @@
 
 @functions {
     UserRegistration registration = new UserRegistration();
-
-    static string InputClass(EditContext context, string fieldName)
-    {
-        var fieldIdentifier = FieldIdentifier.Create(context.Model, fieldName);
-        if (context.IsValid(fieldIdentifier))
-        {
-            return context.IsModified(fieldIdentifier) ? "valid" : string.Empty;
-        }
-        else
-        {
-            return "invalid";
-        }
-    }
 
     void HandleValidSubmit(EditContext editContext)
     {

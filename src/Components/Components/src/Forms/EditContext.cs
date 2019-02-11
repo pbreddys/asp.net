@@ -89,6 +89,18 @@ namespace Microsoft.AspNetCore.Components.Forms
             return IsValid();
         }
 
+        public string ClassName(FieldIdentifier fieldIdentifier)
+        {
+            if (IsValid(fieldIdentifier))
+            {
+                return IsModified(fieldIdentifier) ? "valid modified" : "valid";
+            }
+            else
+            {
+                return IsModified(fieldIdentifier) ? "invalid modified" : "invalid";
+            }
+        }
+
         internal FieldState GetState(FieldIdentifier identifier, bool ensureExists)
         {
             if (_fieldStates.TryGetValue(identifier, out var result))
