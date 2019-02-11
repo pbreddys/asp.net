@@ -4,11 +4,11 @@
 
 <EditForm Model="@registration" OnValidSubmit="@HandleValidSubmit">
     <p>
-        Username: <input bind-value-oninput="registration.UserName" class="@context.ClassName(FieldIdentifier.Create(registration, nameof(registration.UserName)))" />
+        Username: <input bind-value-oninput="registration.UserName" class="@context.ClassName(FieldIdentifier.Create(() => registration.UserName))" />
     </p>
     <p>
-        Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@context.ClassName(FieldIdentifier.Create(registration, nameof(registration.AcceptsTerms)))" />
-        <ValidationMessage For="FieldIdentifier.Create(registration, nameof(registration.AcceptsTerms))" />
+        Accept terms: <input type="checkbox" bind="registration.AcceptsTerms" class="@context.ClassName(FieldIdentifier.Create(() => registration.AcceptsTerms))" />
+        <ValidationMessage For="@FieldIdentifier.Create(() => registration.AcceptsTerms)" />
     </p>
     <p>
         <button type="submit">Submit</button>

@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Microsoft.AspNetCore.Components.Forms
 {
@@ -19,6 +21,27 @@ namespace Microsoft.AspNetCore.Components.Forms
         /// <returns>The corresponding <see cref="FieldIdentifier"/>.</returns>
         public static FieldIdentifier Create<TModel>(TModel model, string fieldName) where TModel : class
             => new FieldIdentifier(model, fieldName);
+
+        /// <summary>
+        /// Returns a <see cref="FieldIdentifier"/> matching the specified object property.
+        /// </summary>
+        /// <param name="fieldExpression">An expression that evaluates the field.</param>
+        /// <returns>The corresponding <see cref="FieldIdentifier"/>.</returns>
+        public static FieldIdentifier Create<TField>(Expression<Func<TField>> fieldExpression)
+        {
+            if (!(fieldExpression.Body is MemberExpression memberExpression
+                && memberExpression.Member is PropertyInfo propertyInfo))
+            {
+                throw new InvalidOperationException("Currently, only PropertyExpression is supported.");
+            }
+
+            // TODO: Can we cache this somehow?
+            var modelExpression = (MemberExpression)memberExpression.Expression;
+            var modelLambda = Expression.Lambda(modelExpression);
+            var modelLambdaCompiled = (Func<object>)modelLambda.Compile();
+
+            return new FieldIdentifier(modelLambdaCompiled(), propertyInfo.Name);
+        }
 
         // The constructor is private to enforce usage of FieldIdentifier.Create<TModel>, which in turn enforces that the model
         // is reference-typed (otherwise we may have unintentional clashes of FieldIdentifier)
