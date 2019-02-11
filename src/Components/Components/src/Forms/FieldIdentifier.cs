@@ -29,7 +29,17 @@ namespace Microsoft.AspNetCore.Components.Forms
         /// <returns>The corresponding <see cref="FieldIdentifier"/>.</returns>
         public static FieldIdentifier Create<TField>(Expression<Func<TField>> fieldExpression)
         {
-            if (!(fieldExpression.Body is MemberExpression memberExpression
+            Expression possibleMemberExpression = fieldExpression.Body;
+
+            // Unwrap casts to object
+            if (possibleMemberExpression is UnaryExpression unaryExpression
+                && unaryExpression.NodeType == ExpressionType.Convert
+                && unaryExpression.Type == typeof(object))
+            {
+                possibleMemberExpression = unaryExpression.Operand;
+            }
+
+            if (!(possibleMemberExpression is MemberExpression memberExpression
                 && memberExpression.Member is PropertyInfo propertyInfo))
             {
                 throw new InvalidOperationException("Currently, only PropertyExpression is supported.");

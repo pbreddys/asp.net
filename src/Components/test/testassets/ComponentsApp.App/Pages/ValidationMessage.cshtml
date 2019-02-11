@@ -1,21 +1,30 @@
+@using System.Linq.Expressions
 @using Microsoft.AspNetCore.Components.Forms
 @implements IDisposable
 
-@if (For.Model != null)
+@if (_fieldIdentifier.Model != null)
 {
-    foreach (var message in EditContext.ValidationErrorMessages(For))
+    foreach (var message in EditContext.ValidationErrorMessages(_fieldIdentifier))
     {
         <span class="error">@message</span>
     }
 }
 
 @functions  {
+    FieldIdentifier _fieldIdentifier;
+
     [CascadingParameter] EditContext EditContext { get; set; }
-    [Parameter] FieldIdentifier For { get; set; }
+    [Parameter] FieldIdentifier FieldIdentifier { get; set; }
+    [Parameter] Expression<Func<object>> For { get; set; }
 
     protected override void OnInit()
     {
         EditContext.ValidationPerformed += StateHasChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        _fieldIdentifier = For != null ? FieldIdentifier.Create(For) : FieldIdentifier;
     }
 
     void IDisposable.Dispose()
