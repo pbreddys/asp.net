@@ -11,6 +11,9 @@
       Temporarily disabled until this runs on macOS
     -->
     <SkipTests Condition="'$(SeleniumE2ETestsSupported)' != 'true'">true</SkipTests>
+    
+    <BaseOutputPath />
+    <OutputPath />    
   </PropertyGroup>
 
   <ItemGroup>
