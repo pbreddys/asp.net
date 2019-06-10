@@ -10,10 +10,7 @@
     <!--
       Temporarily disabled until this runs on macOS
     -->
-    <SkipTests Condition="'$(SeleniumE2ETestsSupported)' != 'true'">true</SkipTests>
-    
-    <BaseOutputPath />
-    <OutputPath />    
+    <SkipTests Condition="'$(SeleniumE2ETestsSupported)' != 'true' AND '$(IsHelixJob)' != 'true'">true</SkipTests>
   </PropertyGroup>
 
   <ItemGroup>
