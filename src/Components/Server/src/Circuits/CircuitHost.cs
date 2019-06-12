@@ -182,6 +182,7 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
             {
                 await Renderer.Invoke(() =>
                 {
+                    Thread.Sleep(100);
                     SetCurrentCircuitHost(this);
                     DotNetDispatcher.BeginInvoke(callId, assemblyName, methodIdentifier, dotNetObjectId, argsJson);
                 });

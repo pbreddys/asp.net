@@ -4,10 +4,29 @@
 
 <p>Current count: @currentCount</p>
 
-<button class="btn btn-primary" @onclick="@IncrementCount">Click me</button>
+@if (currentCount < 3)
+{
+    <button class="btn btn-primary" @onclick="@IncrementCount">Click me</button>
+}
+
+<input @bind-value="@newText" @bind-value:event="oninput" /> [@newText]
+
+<p><input type="checkbox" @bind="@BoolThatRemainsFalse" /> This is meant to stay false</p>
+<p><input type="checkbox" @bind="@BoolThatRemainsTrue" /> This is meant to stay true</p>
 
 @code {
     int currentCount = 0;
+    string newText;
+    bool BoolThatRemainsFalse
+    {
+        get => false;
+        set {}
+    }
+    bool BoolThatRemainsTrue
+    {
+        get => true;
+        set {}
+    }
 
     void IncrementCount()
     {

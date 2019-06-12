@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.JSInterop;
 
@@ -26,6 +28,7 @@ namespace Microsoft.AspNetCore.Components.Server.Circuits
                     "attempted during prerendering or while the client is disconnected.");
             }
 
+            Thread.Sleep(100);
             _clientProxy.SendAsync("JS.BeginInvokeJS", asyncHandle, identifier, argsJson);
         }
     }

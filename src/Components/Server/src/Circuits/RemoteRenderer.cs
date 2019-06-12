@@ -180,6 +180,7 @@ namespace Microsoft.AspNetCore.Components.Browser.Rendering
                 }
 
                 Log.BeginUpdateDisplayAsync(_logger, _client.ConnectionId);
+                Thread.Sleep(100);
                 await _client.SendAsync("JS.RenderBatch", Id, pending.BatchId, pending.Data);
             }
             catch (Exception e)
@@ -195,6 +196,8 @@ namespace Microsoft.AspNetCore.Components.Browser.Rendering
 
         public void OnRenderCompleted(long incomingBatchId, string errorMessageOrNull)
         {
+            Thread.Sleep(100);
+
             if (_disposing)
             {
                 // Disposing so don't do work.
