@@ -20,6 +20,7 @@ namespace Microsoft.AspNetCore.Components.Rendering
         private readonly Dictionary<int, ComponentState> _componentStateById = new Dictionary<int, ComponentState>();
         private readonly RenderBatchBuilder _batchBuilder = new RenderBatchBuilder();
         private readonly Dictionary<int, EventCallback> _eventBindings = new Dictionary<int, EventCallback>();
+        private readonly Dictionary<int, int> _eventHandlerIdReplacements = new Dictionary<int, int>();
         private readonly IDispatcher _dispatcher;
 
         private int _nextComponentId = 0; // TODO: change to 'long' when Mono .NET->JS interop supports it
@@ -213,6 +214,8 @@ namespace Microsoft.AspNetCore.Components.Rendering
         {
             EnsureSynchronizationContext();
 
+            UpdateRenderTreeToMatchClientState(eventHandlerId, eventArgs);
+
             if (!_eventBindings.TryGetValue(eventHandlerId, out var callback))
             {
                 throw new ArgumentException($"There is no event handler with ID {eventHandlerId}");
@@ -243,6 +246,106 @@ namespace Microsoft.AspNetCore.Components.Rendering
             // Task completed synchronously or is still running. We already processed all of the rendering
             // work that was queued so let our error handler deal with it.
             return GetErrorHandledTask(task);
+        }
+
+        private void UpdateRenderTreeToMatchClientState(int eventHandlerId, UIEventArgs eventArgs)
+        {
+            eventHandlerId = FindLatestEventHandlerInReplacementChain(eventHandlerId);
+
+            // TODO: Have the client supply the componentId for the rendertree that contains eventHandlerId
+            var renderingComponentId = FindComponentContainingEventHandler(eventHandlerId);
+            if (renderingComponentId < 0)
+            {
+                return;
+            }
+
+            var componentState = GetOptionalComponentState(renderingComponentId);
+            if (componentState != null)
+            {
+                var tree = componentState.CurrrentRenderTree;
+                if (!TryFindElementContainingEventHandler(tree.GetFrames(), eventHandlerId, out var elementFrameIndex))
+                {
+                    // Looks like the latest version of the tree has no equivalent to the specified event handler,
+                    // so there's nothing for us to update. However we do still want to call the original delegate,
+                    // since the general principle is that we invoke the original event handler delegates regardless
+                    // of what's in the latest tree, so that developers can put in whatever logic they want to handle
+                    // the case where an event either no longer applies, or should have different meanings.
+                    return;
+                }
+
+                UpdateElementTreeToMatchClientState(tree, elementFrameIndex, eventArgs);
+            }
+        }
+
+        private void UpdateElementTreeToMatchClientState(RenderTreeBuilder tree, int elementFrameIndex, UIEventArgs eventArgs)
+        {
+            // TODO: Think through whether we really have enough information for things like <select>. Is it enough
+            // to update a 'value' attribute, or do we need to be setting 'selectedIndex'? Surely it would be better
+            // for the .ts code to supply the attribute name that should be updated.
+            switch (eventArgs)
+            {
+                case UIChangeEventArgs uiChangeEventArgs:
+                    UpdateElementTreeToMatchClientState(tree, elementFrameIndex, new[] { "value", "checked" }, uiChangeEventArgs.Value);
+                    break;
+            }
+        }
+
+        private void UpdateElementTreeToMatchClientState(RenderTreeBuilder tree, int elementFrameIndex, string[] attributeNames, object newAttributeValue)
+        {
+            var frames = tree.GetFrames();
+            ref var elementFrame = ref frames.Array[elementFrameIndex];
+            var subtreeEndExcl = elementFrameIndex + elementFrame.ElementSubtreeLength;
+            for (var attributeFrameIndex = elementFrameIndex + 1; attributeFrameIndex < subtreeEndExcl; attributeFrameIndex++)
+            {
+                ref var attributeFrame = ref frames.Array[attributeFrameIndex];
+                if (attributeFrame.FrameType != RenderTreeFrameType.Attribute)
+                {
+                    break;
+                }
+
+                if (Array.IndexOf(attributeNames, attributeFrame.AttributeName) >= 0) // Obviously this is not really how we want to find the corresponding attribute
+                {
+                    attributeFrame = attributeFrame.WithAttributeValue(newAttributeValue);
+                    break;
+                }
+            }
+        }
+
+        private int FindComponentContainingEventHandler(int eventHandlerId)
+        {
+            foreach (var kvp in _componentStateById)
+            {
+                var tree = kvp.Value.CurrrentRenderTree;
+                if (TryFindElementContainingEventHandler(tree.GetFrames(), eventHandlerId, out _))
+                {
+                    return kvp.Key;
+                }
+            }
+
+            return -1;
+        }
+
+        private bool TryFindElementContainingEventHandler(ArrayRange<RenderTreeFrame> frames, int eventHandlerId, out int elementFrameIndex)
+        {
+            var array = frames.Array;
+            var count = frames.Count;
+            elementFrameIndex = -1;
+            for (var frameIndex = 0; frameIndex < count; frameIndex++)
+            {
+                ref var frame = ref array[frameIndex];
+
+                if (frame.FrameType == RenderTreeFrameType.Element)
+                {
+                    elementFrameIndex = frameIndex;
+                }
+                else if (frame.FrameType == RenderTreeFrameType.Attribute
+                    && frame.AttributeEventHandlerId == eventHandlerId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -614,6 +717,7 @@ namespace Microsoft.AspNetCore.Components.Rendering
                 for (var i = 0; i < count; i++)
                 {
                     _eventBindings.Remove(array[i]);
+                    _eventHandlerIdReplacements.Remove(array[i]);
                 }
             }
             else
@@ -682,6 +786,21 @@ namespace Microsoft.AspNetCore.Components.Rendering
                     }
                 }
             }
+        }
+
+        internal void TrackEventHandlerIdReplacement(int oldEventHandlerId, int newEventHandlerId)
+        {
+            _eventHandlerIdReplacements.Add(oldEventHandlerId, newEventHandlerId);
+        }
+
+        private int FindLatestEventHandlerInReplacementChain(int eventHandlerId)
+        {
+            while (_eventHandlerIdReplacements.TryGetValue(eventHandlerId, out var replacementEventHandlerId))
+            {
+                eventHandlerId = replacementEventHandlerId;
+            }
+
+            return eventHandlerId;
         }
 
         /// <summary>

@@ -331,6 +331,9 @@ namespace Microsoft.AspNetCore.Components.RenderTree
         internal RenderTreeFrame WithAttributeEventHandlerId(int eventHandlerId)
             => new RenderTreeFrame(Sequence, attributeName: AttributeName, AttributeValue, eventHandlerId);
 
+        internal RenderTreeFrame WithAttributeValue(object attributeValue)
+            => new RenderTreeFrame(Sequence, attributeName: AttributeName, attributeValue: attributeValue, attributeEventHandlerId: AttributeEventHandlerId);
+
         internal RenderTreeFrame WithRegionSubtreeLength(int regionSubtreeLength)
             => new RenderTreeFrame(Sequence, regionSubtreeLength: regionSubtreeLength);
 

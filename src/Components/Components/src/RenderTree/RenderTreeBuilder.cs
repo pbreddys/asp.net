@@ -166,7 +166,7 @@ namespace Microsoft.AspNetCore.Components.RenderTree
         public void AddAttribute(int sequence, string name, bool value)
         {
             AssertCanAddAttribute();
-            if (_lastNonAttributeFrameType == RenderTreeFrameType.Component)
+            if (_lastNonAttributeFrameType == RenderTreeFrameType.Component || IsPatchableAttribute(name))
             {
                 Append(RenderTreeFrame.Attribute(sequence, name, value ? BoxedTrue : BoxedFalse));
             }
@@ -197,7 +197,7 @@ namespace Microsoft.AspNetCore.Components.RenderTree
         public void AddAttribute(int sequence, string name, string value)
         {
             AssertCanAddAttribute();
-            if (value != null || _lastNonAttributeFrameType == RenderTreeFrameType.Component)
+            if (value != null || _lastNonAttributeFrameType == RenderTreeFrameType.Component || IsPatchableAttribute(name))
             {
                 Append(RenderTreeFrame.Attribute(sequence, name, value));
             }
@@ -305,6 +305,28 @@ namespace Microsoft.AspNetCore.Components.RenderTree
             else
             {
                 TrackAttributeName(name);
+            }
+        }
+
+        // Instead of doing this, consider modifying Renderer's UpdateElementTreeToMatchClientState
+        // so that, if it can't find the attribute frame to update, it inserts a new one. This is complicated
+        // and expensive because as well as having to do an Array.Copy to insert, we also have to trace back
+        // through all the ancestor element/component/regions to mutate all their subtree lengths. However,
+        // that would be preferable because it lets us avoid hardcoding knowledge of which HTML attribute names
+        // might need mutations. Alternatively we could make it a compiler feature to pass an extra flag to
+        // AddAttribute to say whether we're willing to omit it at runtime.
+        // TBH, updating all the ancestor subtree lengths isn't so bad: just iterate back through all the frames
+        // without regard to hierarchy, and for each container-type frame, check if the newly-inserted frame would
+        // be within its subtree, and if so, increment the subtree length.
+        private bool IsPatchableAttribute(string name)
+        {
+            switch (name)
+            {
+                case "value":
+                case "checked":
+                    return true;
+                default:
+                    return false;
             }
         }
 

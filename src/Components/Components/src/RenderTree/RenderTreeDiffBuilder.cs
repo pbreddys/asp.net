@@ -661,13 +661,15 @@ namespace Microsoft.AspNetCore.Components.RenderTree
             var valueChanged = !Equals(oldFrame.AttributeValue, newFrame.AttributeValue);
             if (valueChanged)
             {
-                if (oldFrame.AttributeEventHandlerId > 0)
-                {
-                    diffContext.BatchBuilder.DisposedEventHandlerIds.Append(oldFrame.AttributeEventHandlerId);
-                }
                 InitializeNewAttributeFrame(ref diffContext, ref newFrame);
                 var referenceFrameIndex = diffContext.ReferenceFrames.Append(newFrame);
                 diffContext.Edits.Append(RenderTreeEdit.SetAttribute(diffContext.SiblingIndex, referenceFrameIndex));
+
+                if (oldFrame.AttributeEventHandlerId > 0)
+                {
+                    diffContext.Renderer.TrackEventHandlerIdReplacement(oldFrame.AttributeEventHandlerId, newFrame.AttributeEventHandlerId);
+                    diffContext.BatchBuilder.DisposedEventHandlerIds.Append(oldFrame.AttributeEventHandlerId);
+                }
             }
             else if (oldFrame.AttributeEventHandlerId > 0)
             {
