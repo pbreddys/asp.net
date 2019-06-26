@@ -571,7 +571,7 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
 
         private JsonDocument GetParsedObject(object obj, Type type)
         {
-            var bytes = JsonSerializer.ToUtf8Bytes(obj, type, _payloadSerializerOptions);
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(obj, type, _payloadSerializerOptions);
             var token = JsonDocument.Parse(bytes);
             return token;
         }
@@ -686,7 +686,7 @@ namespace Microsoft.AspNetCore.SignalR.Protocol
 
         private object BindType(ref Utf8JsonReader reader, Type type)
         {
-            return JsonSerializer.ReadValue(ref reader, type, _payloadSerializerOptions);
+            return JsonSerializer.Deserialize(ref reader, type, _payloadSerializerOptions);
         }
 
         private object[] BindTypes(ref Utf8JsonReader reader, IReadOnlyList<Type> paramTypes)
