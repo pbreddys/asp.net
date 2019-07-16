@@ -8,7 +8,7 @@
     },
     "Source": {
       "Repository": "https://github.com/aspnet/AspNetCore.git",
-      "BranchOrCommit": "master",
+      "BranchOrCommit": "brecon/testP",
       "Project": "src/Servers/Kestrel/perf/PlatformBenchmarks/PlatformBenchmarks.csproj"
     },
     "Port": 8080
