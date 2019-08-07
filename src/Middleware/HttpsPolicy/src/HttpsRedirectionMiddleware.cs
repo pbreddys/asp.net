@@ -17,8 +17,10 @@ namespace Microsoft.AspNetCore.HttpsPolicy
 {
     public class HttpsRedirectionMiddleware
     {
+        private const int PortNotFound = -1;
+
         private readonly RequestDelegate _next;
-        private Lazy<int> _httpsPort;
+        private readonly Lazy<int> _httpsPort;
         private readonly int _statusCode;
 
         private readonly IServerAddressesFeature _serverAddressesFeature;
@@ -83,7 +85,7 @@ namespace Microsoft.AspNetCore.HttpsPolicy
             }
 
             var port = _httpsPort.Value;
-            if (port == -1)
+            if (port == PortNotFound)
             {
                 return _next(context);
             }
@@ -114,6 +116,7 @@ namespace Microsoft.AspNetCore.HttpsPolicy
             return Task.CompletedTask;
         }
 
+        //  Returns PortNotFound (-1) if we were unable to determine the port.
         private int TryGetHttpsPort()
         {
             // The IServerAddressesFeature will not be ready until the middleware is Invoked,
@@ -133,7 +136,7 @@ namespace Microsoft.AspNetCore.HttpsPolicy
             if (_serverAddressesFeature == null)
             {
                 _logger.FailedToDeterminePort();
-                return -1;
+                return PortNotFound;
             }
 
             foreach (var address in _serverAddressesFeature.Addresses)
@@ -145,7 +148,7 @@ namespace Microsoft.AspNetCore.HttpsPolicy
                     if (nullablePort.HasValue && nullablePort != bindingAddress.Port)
                     {
                         _logger.FailedMultiplePorts();
-                        return -1;
+                        return PortNotFound;
                     }
                     else
                     {
@@ -162,7 +165,7 @@ namespace Microsoft.AspNetCore.HttpsPolicy
             }
 
             _logger.FailedToDeterminePort();
-            return -1;
+            return PortNotFound;
         }
     }
 }
