@@ -45,7 +45,7 @@ namespace Microsoft.AspNetCore.HttpsPolicy
             var httpsRedirectionOptions = options.Value;
             if (httpsRedirectionOptions.HttpsPort.HasValue)
             {
-                _httpsPort = new Lazy<int>(() =httpsRedirectionOptions.HttpsPort.Value);
+                _httpsPort = new Lazy<int>(() => httpsRedirectionOptions.HttpsPort.Value);
             }
             else
             {
