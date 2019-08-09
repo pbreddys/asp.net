@@ -146,6 +146,7 @@ namespace Microsoft.AspNetCore.Server.IIS.FunctionalTests.InProcess
         }
 
         [ConditionalFact]
+        [SkipIfNotAdmin]
         [RequiresIIS(IISCapability.PoolEnvironmentVariables)]
         public async Task DoesNotStartIfDisabled()
         {
