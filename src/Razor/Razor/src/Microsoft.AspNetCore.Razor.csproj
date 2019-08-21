@@ -12,7 +12,6 @@ Microsoft.AspNetCore.Razor.TagHelpers.ITagHelper</Description>
     <IsAspNetCoreApp>true</IsAspNetCoreApp>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageTags>$(PackageTags);taghelper;taghelpers</PackageTags>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
 
     <!-- Required to implement an HtmlEncoder -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
