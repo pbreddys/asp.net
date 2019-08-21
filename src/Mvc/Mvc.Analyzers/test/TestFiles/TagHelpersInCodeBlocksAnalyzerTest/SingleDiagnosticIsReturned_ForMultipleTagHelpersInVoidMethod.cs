@@ -33,13 +33,13 @@ namespace AspNetCore
         public async override global::System.Threading.Tasks.Task ExecuteAsync()
         {
             WriteLiteral("\r\n");
-  
+
     SometMethod();
 
             WriteLiteral("\r\n");
         }
         #pragma warning restore 1998
-            
+
     /*MM*/void SometMethod()
     {
 
@@ -120,4 +120,3 @@ namespace AspNetCore
         public global::Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper<dynamic> Html { get; private set; }
     }
 }
-#pragma warning restore 1591

@@ -35,7 +35,7 @@ namespace AspNetCore
         {
             WriteLiteral("\r\n");
             WriteLiteral("\r\n");
-  
+
     Func<Task> sometMethod = /*MM*/async () =>
     {
 
@@ -78,4 +78,3 @@ namespace AspNetCore
         public global::Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper<dynamic> Html { get; private set; }
     }
 }
-#pragma warning restore 1591

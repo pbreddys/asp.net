@@ -34,7 +34,7 @@ namespace AspNetCore
         {
             WriteLiteral("\r\n");
             WriteLiteral("\r\n");
-  
+
     TestDelegate sometMethod = /*MM*/delegate ()
     {
 
@@ -66,7 +66,7 @@ namespace AspNetCore
             WriteLiteral("\r\n");
         }
         #pragma warning restore 1998
-            
+
     delegate void TestDelegate();
 
         [global::Microsoft.AspNetCore.Mvc.Razor.Internal.RazorInjectAttribute]
@@ -81,4 +81,3 @@ namespace AspNetCore
         public global::Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper<dynamic> Html { get; private set; }
     }
 }
-#pragma warning restore 1591
