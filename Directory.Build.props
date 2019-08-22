@@ -46,11 +46,19 @@
     <DefaultNetCoreTargetFramework>netcoreapp$(AspNetCoreMajorVersion).$(AspNetCoreMinorVersion)</DefaultNetCoreTargetFramework>
   </PropertyGroup>
 
+  <!-- Arcade defaults NoWarn to include 1591 (doc comments missing), but we want to enable it for shipping assemblies, so remove it from the list here.  -->
+  <ItemGroup>
+    <_MyNoWarn Include="$(NoWarn)" />
+    <_MyNoWarn Remove="1591" />
+  </ItemGroup>
+
   <!-- Warnings and errors -->
   <PropertyGroup>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- xUnit1004 = warns about skipped tests. Make this a non-fatal build warning. -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);xUnit1004</WarningsNotAsErrors>
+
+    <NoWarn Condition="'$(IsShipping)' != 'false' AND '$(IsReferenceAssemblyProject)' != 'true'">@(_MyNoWarn)</NoWarn>
   </PropertyGroup>
 
   <!-- Source code settings -->
